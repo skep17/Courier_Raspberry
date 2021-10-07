@@ -19,19 +19,19 @@ class Engine():
         self.pwm = GPIO.PWM(self.enb,100)
         self.pwm.start(0)
     
-    def mFwd(self,v=50,t=0.5):
+    def mFwd(self,v=50,t=0.05):
         GPIO.output(self.in1,GPIO.HIGH)
         GPIO.output(self.in2,GPIO.LOW)
         self.pwm.ChangeDutyCycle(v)
         time.sleep(t)
 
-    def mBwd(self,v=50,t=0.5):
+    def mBwd(self,v=50,t=0.05):
         GPIO.output(self.in1,GPIO.LOW)
         GPIO.output(self.in2,GPIO.HIGH)
         self.pwm.ChangeDutyCycle(v)
         time.sleep(t)
         
-    def halt(self,t=0.5):
+    def halt(self,t=0.05):
         self.pwm.ChangeDutyCycle(0)
         time.sleep(t)
         
@@ -50,12 +50,11 @@ class UltraSonic():
                 time.sleep(0.00001)
                 GPIO.output(self.trig,False)
                 while GPIO.input(self.echo)==0:
-                        ti=time.time()
+                        ti = time.time()
                 while GPIO.input(self.echo)==1:
-                        tf=time.time()
-                dt=tf-ti
+                        tf = time.time()
+                dt = tf-ti
                 s=dt*17150
-                print(round(s,2))
                 return round(s,2)
         
 
@@ -70,39 +69,43 @@ class InfraRed():
                     return True
                 else:
                     return False
-                
-i1,i2,ena,i3,i4,enb,i5,i6,enc,i7,i8,end,tr1,ec1,tr2,ec2 = 5,7,3,11,13,15,21,19,23,35,33,37,32,36,38,40
 
-lb_engine = Engine(21,19,23)
-rb_engine = Engine(5,7,3)
-lf_engine = Engine(35,37,33)
-rf_engine = Engine(11,13,15)
 
-l_sonic = UltraSonic(tr1,ec1)
-r_sonic = UltraSonic(tr2,ec2)
+lb_engine = Engine(19,21,15)
+rb_engine = Engine(37,35,33)
+lf_engine = Engine(11,13,7)
+rf_engine = Engine(31,29,23)
+
+l_sonic = UltraSonic(16,12)
+r_sonic = UltraSonic(40,38)
 
 #l_infr = InfraRed(ir1)
 #r_infr = InfraRed(ir2)
 
-
-while(True):
+worktime = time.perf_counter() + 60
+time.sleep(7)
+while(time.perf_counter()<=worktime):
         l_dis = l_sonic.calc()
-        print(l_dis)
         r_dis = r_sonic.calc()
-        print(r_dis)
-        if l_dis > 30 and r_dis > 30:
-                lb_engine.mFwd(100)
-                rb_engine.mFwd(100)
-                lf_engine.mFwd(50)
-                rf_engine.mFwd(50)
+        if l_dis > 45 and r_dis > 45:
+            lb_engine.mFwd(100)
+            rb_engine.mFwd(100)
+            lf_engine.mFwd()
+            rf_engine.mFwd()
         elif l_dis > r_dis:
-                lb_engine.halt()
-                rb_engine.mFwd(50)
-                lf_engine.halt()
-                rf_engine.mFwd(50)
+            lb_engine.halt()
+            rb_engine.mFwd(30)
+            lf_engine.halt()
+            rf_engine.mFwd(30)
         else:
-                lb_engine.mFwd(50)
-                rb_engine.halt()
-                lf_engine.mFwd(50)
-                rf_engine.halt()
-                
+            rb_engine.halt()
+            lb_engine.mFwd(30)
+            rf_engine.halt()
+            lf_engine.mFwd(30)
+        
+        
+lb_engine.halt()
+rb_engine.halt()
+lf_engine.halt()
+rf_engine.halt()
+            
